@@ -1,0 +1,7 @@
+# Кэш Python
+__pycache__/
+
+# Локальное окружение
+env/
+
+bot_token.py
