@@ -3,3 +3,5 @@ __pycache__/
 
 # Локальное окружение
 env/
+
+bot_token.py
