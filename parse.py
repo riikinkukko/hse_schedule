@@ -1,8 +1,11 @@
 import requests
 from time import sleep
-from bs4 import BeautifulSoup as Soup
+from os.path import join
+from os import makedirs
 
-PARSING_URL = 'https://docs.google.com/spreadsheets/d/1BMR4Zk3BU2Tyo7L-CYJeMfVuCxjmmT94kfz4Jp6BFAc/edit?gid=739453176#gid=739453176'
+PARSING_URL = 'https://docs.google.com/spreadsheets/d/1BMR4Zk3BU2Tyo7L-CYJeMfVuCxjmmT94kfz4Jp6BFAc/export?gid=739453176'
+FILENAME = 'timetable.xlsx'
+DEST_FOLDER = ''
 
 
 def check_for_redirect(response):
@@ -22,13 +25,19 @@ def get_response(url):
             sleep(15)
 
 
-def parse():
-    pass
+def download_timetable():
+    response = requests.get(PARSING_URL)
+    if DEST_FOLDER:
+        makedirs(DEST_FOLDER, exist_ok=True)
+    filepath = join(DEST_FOLDER, FILENAME).replace(r'\\', '/')
+    with open(filepath, 'wb') as file:
+        file.write(response.content)
+    return filepath
 
-   
+
 def main():
     pass
 
 
 if __name__ == '__main__':
-    parse()
+    download_timetable()
