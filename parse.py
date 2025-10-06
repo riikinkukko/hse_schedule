@@ -5,7 +5,6 @@ from os.path import join
 from os import makedirs
 from openpyxl.reader.excel import load_workbook
 
-from pprint import pprint
 
 PARSING_URL = 'https://docs.google.com/spreadsheets/d/1BMR4Zk3BU2Tyo7L-CYJeMfVuCxjmmT94kfz4Jp6BFAc/export?gid=739453176'
 FILENAME = 'timetable.xlsx'
@@ -41,16 +40,15 @@ def download_timetable():
     return filepath
 
 
-def render_data(value, classnumber):
-    trash = ['---------------------', '---------']
-    value = value.replace('\n', '').replace(trash[0], '').replace(trash[1], '').strip()
+def format_data(value, classnumber):
+    value = value.replace('\n', '').replace('-'*21, '').replace('-'*9, '').strip()
     value = value.rsplit(' - ', maxsplit=1)
     if len(value) > 1 and classnumber:
         lecture, teacher = value
         lesson = {
             'lesson_name': lecture,
             'teacher': teacher,
-            'classnumber': int(classnumber) if classnumber != '-' else '-'
+            'classnumber': int(classnumber) if classnumber != '-' else 'online'
         }
         return lesson
     return 'None'
@@ -84,14 +82,14 @@ def get_data_from_xlsx():
             line += 1
             value = sheet[f'{groups[GROUP_NUMBER-1]}{line}'].value
             classnumber = sheet[f'{chr(ord(groups[GROUP_NUMBER-1]) + 1)}{line}'].value
-            schelude[key].append(render_data(value, classnumber) if value else 'None')
-    save_json(schelude, JSON_FILE)
-    pprint(schelude, sort_dicts=False)
- 
+            schelude[key].append(format_data(value, classnumber) if value else 'None')
+    return schelude
+
 
 def main():
-    pass
+    data = get_data_from_xlsx()
+    save_json(data, JSON_FILE)
 
 
 if __name__ == '__main__':
-    get_data_from_xlsx()
+    main()
