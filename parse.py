@@ -1,5 +1,4 @@
 import requests
-import openpyxl
 import json
 from time import sleep
 from os.path import join
@@ -79,16 +78,16 @@ def get_data_from_xlsx():
     }
     sheet = load_workbook(filename=FILENAME, data_only=True).active
 
-    count = 11
+    line = 11
     for key in schelude.keys():
         for _ in range(9):
-            count += 1
-            value = sheet[f'{groups[GROUP_NUMBER-1]}{count}'].value
-            classnumber = sheet[f'{chr(ord(groups[GROUP_NUMBER-1]) + 1)}{count}'].value
+            line += 1
+            value = sheet[f'{groups[GROUP_NUMBER-1]}{line}'].value
+            classnumber = sheet[f'{chr(ord(groups[GROUP_NUMBER-1]) + 1)}{line}'].value
             schelude[key].append(render_data(value, classnumber) if value else 'None')
     save_json(schelude, JSON_FILE)
     pprint(schelude, sort_dicts=False)
-
+ 
 
 def main():
     pass
