@@ -84,7 +84,7 @@ def get_data_from_xlsx():
         for _ in range(9):
             count += 1
             value = sheet[f'{groups[GROUP_NUMBER-1]}{count}'].value
-            classnumber = sheet[f'{'V'}{count}'].value
+            classnumber = sheet[f'{chr(ord(groups[GROUP_NUMBER-1]) + 1)}{count}'].value
             schelude[key].append(render_data(value, classnumber) if value else 'None')
     save_json(schelude, JSON_FILE)
     pprint(schelude, sort_dicts=False)
