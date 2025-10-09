@@ -8,9 +8,10 @@ from openpyxl.reader.excel import load_workbook
 
 from pprint import pprint
 
-PARSING_URL = 'https://docs.google.com/spreadsheets/d/1BMR4Zk3BU2Tyo7L-CYJeMfVuCxjmmT94kfz4Jp6BFAc/export'
-GID = 739453176
-TIMETABLE_FILENAME = 'timetable.xlsx'
+MAIN_ID = '1BMR4Zk3BU2Tyo7L-CYJeMfVuCxjmmT94kfz4Jp6BFAc'
+MAIN_GID = 739453176
+ENGLISH_ID = '1RB9AWtrYm6Y9m8NSy6On7Zk3byws8RonAGBqeneSxOo'
+ENGLISH_GID = 23993546
 DEST_FOLDER = ''
 GROUP_NUMBER = 5
 OUTPUT_FILE = 'schelude.json'
@@ -33,11 +34,12 @@ def get_response(url):
             sleep(15)
 
 
-def download_timetable(gid):
-    response = requests.get(PARSING_URL, params={'gid': gid})
-    if DEST_FOLDER:
-        makedirs(DEST_FOLDER, exist_ok=True)
-    filepath = join(DEST_FOLDER, TIMETABLE_FILENAME).replace(r'\\', '/')
+def download_timetable(id, gid, timetable_filename, dest_folder=''):
+    url = f'https://docs.google.com/spreadsheets/d/{id}/export'
+    response = requests.get(url, params={'gid': gid})
+    if dest_folder:
+        makedirs(dest_folder, exist_ok=True)
+    filepath = join(dest_folder, timetable_filename).replace(r'\\', '/')
     with open(filepath, 'wb') as file:
         file.write(response.content)
     return filepath
@@ -89,10 +91,11 @@ def get_data_from_xlsx(filepath):
 
 
 def main():
-    filepath = download_timetable(GID)
-    data = get_data_from_xlsx(filepath)
-    save_json(data, OUTPUT_FILE)
-    pprint(data, sort_dicts=False)
+    download_timetable(MAIN_ID, MAIN_GID, 'time.xlsx')
+    print(download_timetable(ENGLISH_ID, ENGLISH_GID, 'time2.xlsx'))
+    # data = get_data_from_xlsx(filepath)
+    # save_json(data, OUTPUT_FILE)
+    # pprint(data, sort_dicts=False)
 
 
 if __name__ == '__main__':
