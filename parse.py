@@ -6,11 +6,14 @@ from os import makedirs
 from openpyxl.reader.excel import load_workbook
 
 
-PARSING_URL = 'https://docs.google.com/spreadsheets/d/1BMR4Zk3BU2Tyo7L-CYJeMfVuCxjmmT94kfz4Jp6BFAc/export?gid=739453176'
-FILENAME = 'timetable.xlsx'
+from pprint import pprint
+
+PARSING_URL = 'https://docs.google.com/spreadsheets/d/1BMR4Zk3BU2Tyo7L-CYJeMfVuCxjmmT94kfz4Jp6BFAc/export'
+GID = 739453176
+TIMETABLE_FILENAME = 'timetable.xlsx'
 DEST_FOLDER = ''
 GROUP_NUMBER = 5
-JSON_FILE = 'schelude.json'
+OUTPUT_FILE = 'schelude.json'
 
 
 def check_for_redirect(response):
@@ -30,11 +33,11 @@ def get_response(url):
             sleep(15)
 
 
-def download_timetable():
-    response = requests.get(PARSING_URL)
+def download_timetable(gid):
+    response = requests.get(PARSING_URL, params={'gid': gid})
     if DEST_FOLDER:
         makedirs(DEST_FOLDER, exist_ok=True)
-    filepath = join(DEST_FOLDER, FILENAME).replace(r'\\', '/')
+    filepath = join(DEST_FOLDER, TIMETABLE_FILENAME).replace(r'\\', '/')
     with open(filepath, 'wb') as file:
         file.write(response.content)
     return filepath
@@ -63,7 +66,7 @@ def save_json(data, filename, folder=''):
     return filepath
 
 
-def get_data_from_xlsx():
+def get_data_from_xlsx(filepath):
     groups = ['E', 'I', 'M', 'Q', 'U', 'Y', 'AC']
     schelude = {
         'mon': [],
@@ -72,9 +75,8 @@ def get_data_from_xlsx():
         'thu': [],
         'fri': [],
         'sat': [],
-        'sun': [],
     }
-    sheet = load_workbook(filename=FILENAME, data_only=True).active
+    sheet = load_workbook(filename=filepath, data_only=True).active
 
     line = 11
     for key in schelude.keys():
@@ -87,8 +89,10 @@ def get_data_from_xlsx():
 
 
 def main():
-    data = get_data_from_xlsx()
-    save_json(data, JSON_FILE)
+    filepath = download_timetable(GID)
+    data = get_data_from_xlsx(filepath)
+    save_json(data, OUTPUT_FILE)
+    pprint(data, sort_dicts=False)
 
 
 if __name__ == '__main__':
