@@ -6,6 +6,8 @@ from os.path import join
 from os import makedirs
 from openpyxl.reader.excel import load_workbook
 
+from pprint import pprint
+
 
 MAIN_ID = '1BMR4Zk3BU2Tyo7L-CYJeMfVuCxjmmT94kfz4Jp6BFAc'
 MAIN_GID = 739453176
@@ -13,7 +15,6 @@ ENGLISH_ID = '1RB9AWtrYm6Y9m8NSy6On7Zk3byws8RonAGBqeneSxOo'
 ENGLISH_GID = 23993546
 GROUP_NUMBER = 5
 DEST_FOLDER = ''
-FACULTY = 'knt'
 OUTPUT_FILE = 'schelude.json'
 
 
@@ -123,7 +124,7 @@ def get_data_from_eng_xlsx(filepath):
         'sat': [],
     }
     sheet = load_workbook(filename=filepath, data_only=True).active
-    faculty = faculties[FACULTY]
+    faculty = faculties['knt']
     line = 10
     for key in schelude.keys():
         for _ in range(7):
@@ -139,16 +140,22 @@ def get_data_from_eng_xlsx(filepath):
             classnumbers = del_spaces(list(map(str.strip, column_classnumbers.split('\n'))))
             lessons = format_eng_lessons(groups, teachers, classnumbers)
             schelude[key].append(lessons)
-            # if key == 'sun':
-            #     pprint(lessons, sort_dicts=False)
-    pprint(schelude, sort_dicts=False)
+    return schelude
+
+
+def join_scheludes(eng_schelude, schelude):
+    for key in schelude.keys():
+        if eng_schelude[key] != ['None']*7:
+            schelude[key] = eng_schelude[key]
     return schelude
 
 
 def main():
-    get_data_from_main_xlsx(download_timetable(MAIN_ID, MAIN_GID, 'timetable.xlsx'))
-    get_data_from_eng_xlsx(download_timetable(ENGLISH_ID, ENGLISH_GID, 'timetable_eng.xlsx'))
-    # save_json(data, OUTPUT_FILE)
+    schelude = get_data_from_main_xlsx(download_timetable(MAIN_ID, MAIN_GID, 'timetable.xlsx'))
+    eng_schelude = get_data_from_eng_xlsx(download_timetable(ENGLISH_ID, ENGLISH_GID, 'timetable_eng.xlsx'))
+    data = join_scheludes(eng_schelude, schelude)
+    pprint(data, sort_dicts=False)
+    save_json(data, OUTPUT_FILE)
 
 
 if __name__ == '__main__':
