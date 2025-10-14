@@ -1,7 +1,7 @@
-import requests
+import aiohttp
+import asyncio
 import json
 from re import findall
-from time import sleep
 from os.path import join
 from os import makedirs
 from openpyxl.reader.excel import load_workbook
@@ -18,32 +18,33 @@ DEST_FOLDER = ''
 OUTPUT_FILE = 'schelude.json'
 
 
-def check_for_redirect(response):
+async def check_for_redirect(response):
     if response.history:
-        raise requests.HTTPError
+        raise aiohttp.ClientError("Request was redirected")
 
 
-def get_response(url):
+async def get_response(session, url):
     while True:
         try:
-            response = requests.get(url)
-            response.raise_for_status()
-            check_for_redirect(response)
-            return response
-        except ConnectionError:
-            print('Подключение отсутствует')
-            sleep(15)
+            async with session.get(url) as response:
+                response.raise_for_status()
+                await check_for_redirect(response)
+                return response
+        except (aiohttp.ClientError, asyncio.TimeoutError):
+            print('Подключение отсутствует, повторная попытка через 15 секунд...')
+            await asyncio.sleep(15)
 
 
-def download_timetable(id, gid, timetable_filename, dest_folder=''):
+async def download_timetable(session, id, gid, timetable_filename, dest_folder=''):
     url = f'https://docs.google.com/spreadsheets/d/{id}/export'
-    response = requests.get(url, params={'gid': gid})
-    if dest_folder:
-        makedirs(dest_folder, exist_ok=True)
-    filepath = join(dest_folder, timetable_filename).replace(r'\\', '/')
-    with open(filepath, 'wb') as file:
-        file.write(response.content)
-    return filepath
+    async with session.get(url, params={'gid': gid}) as response:
+        if dest_folder:
+            makedirs(dest_folder, exist_ok=True)
+        filepath = join(dest_folder, timetable_filename).replace(r'\\', '/')
+        content = await response.read()
+        with open(filepath, 'wb') as file:
+            file.write(content)
+        return filepath
 
 
 def format_lessons(value, classnumber):
@@ -150,13 +151,20 @@ def join_scheludes(eng_schelude, schelude):
     return schelude
 
 
-def main():
-    schelude = get_data_from_main_xlsx(download_timetable(MAIN_ID, MAIN_GID, 'timetable.xlsx'))
-    eng_schelude = get_data_from_eng_xlsx(download_timetable(ENGLISH_ID, ENGLISH_GID, 'timetable_eng.xlsx'))
-    data = join_scheludes(eng_schelude, schelude)
-    pprint(data, sort_dicts=False)
-    save_json(data, OUTPUT_FILE)
+async def main():
+    async with aiohttp.ClientSession() as session:
+        main_file, eng_file = await asyncio.gather(
+            download_timetable(session, MAIN_ID, MAIN_GID, 'timetable.xlsx'),
+            download_timetable(session, ENGLISH_ID, ENGLISH_GID, 'timetable_eng.xlsx')
+        )
+
+        schelude = get_data_from_main_xlsx(main_file)
+        eng_schelude = get_data_from_eng_xlsx(eng_file)
+
+        data = join_scheludes(eng_schelude, schelude)
+        pprint(data, sort_dicts=False)
+        save_json(data, OUTPUT_FILE)
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
