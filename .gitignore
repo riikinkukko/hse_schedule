@@ -1,8 +1,4 @@
-# Кэш Python
-__pycache__/
+.env
+
+venv/
 .idea/
-
-# Локальное окружение
-.env/
-
-bot_token.py
