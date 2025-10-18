@@ -91,3 +91,28 @@ async def cmd_reset(message: Message, state: FSMContext):
     await message.answer(
         "🗑️ Все ваши данные сброшены. Используйте /start для повторной регистрации."
     )
+
+
+@command_router.message(Command("settings"))
+async def cmd_settings(message: Message):
+    user_id = message.from_user.id
+
+    if not db.user_exists(user_id):
+        await message.answer("❌ Вы не зарегистрированы. Используйте /start для регистрации.")
+        return
+
+    user_groups = db.get_user_groups(user_id)
+    if user_groups:
+        group_cst, group_eng = user_groups
+        settings_text = (
+            "⚙️ Настройки:\n\n"
+            f"📊 Текущие настройки:\n"
+            f"• Группа КНТ: {group_cst}\n"
+            f"• Группа английского: {group_eng}\n\n"
+            "Выберите действие:"
+        )
+    else:
+        settings_text = "⚙️ Настройки:\n\nВыберите действие:"
+
+    from keyboards import get_settings_menu
+    await message.answer(settings_text, reply_markup=get_settings_menu())
