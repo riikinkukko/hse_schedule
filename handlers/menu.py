@@ -7,6 +7,9 @@ from keyboards import get_main_menu
 from states import UserStates
 from parsers.excel_parser import fetch_schedule
 
+from lexicon import LEXICON_BUTTONS
+
+
 menu_router = Router(name=__name__)
 
 
@@ -24,7 +27,7 @@ async def choose_schedule(callback: CallbackQuery, state: FSMContext):
     builder = InlineKeyboardBuilder()
     for i, option in enumerate(schedule_options):
         builder.button(text=option, callback_data=f"schedule_{i}")
-    builder.button(text="⬅️ Назад", callback_data="back_to_menu")
+    builder.button(text=LEXICON_BUTTONS["back_to_menu"], callback_data="back_to_menu")
     builder.adjust(1)
 
     await callback.message.edit_text(
@@ -298,10 +301,10 @@ def search_lessons_by_name(schedule_data, subject_name):
 @menu_router.callback_query(F.data == "settings")
 async def settings(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
-    builder.button(text="🗑️ Очистить данные", callback_data="clear_data")
-    builder.button(text="📊 Статистика", callback_data="statistics")
+    builder.button(text=LEXICON_BUTTONS["clear_data"], callback_data="clear_data")
+    builder.button(text=LEXICON_BUTTONS["statistics"], callback_data="statistics")
     builder.button(text="🔄 Обновить расписание", callback_data="update_schedule")
-    builder.button(text="⬅️ Назад", callback_data="back_to_menu")
+    builder.button(text=LEXICON_BUTTONS["back_to_menu"], callback_data="back_to_menu")
     builder.adjust(1)
 
     await callback.message.edit_text(

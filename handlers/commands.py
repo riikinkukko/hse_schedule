@@ -7,6 +7,9 @@ from keyboards import get_main_menu
 from states import UserStates
 from database.database import db
 
+from lexicon import LEXICON_COMMANDS
+
+
 command_router = Router(name=__name__)
 
 
@@ -53,7 +56,7 @@ async def cmd_menu(message: Message, state: FSMContext):
         return
 
     await message.answer(
-        "Главное меню:",
+        text=LEXICON_COMMANDS["/menu"],
         reply_markup=get_main_menu()
     )
     await state.set_state(UserStates.main_menu)
