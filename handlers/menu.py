@@ -406,7 +406,6 @@ def format_lesson(lesson):
         return "-"
 
     if isinstance(lesson, list):
-        # Обработка английского языка
         for eng_lesson in lesson:
             if eng_lesson.get('group') == 5:
                 class_info = f"🏫 ауд. {eng_lesson['classnumber']}" if eng_lesson['classnumber'] != 'online' else "🌐 онлайн"
@@ -414,10 +413,8 @@ def format_lesson(lesson):
         return "🇬🇧 <b>Английский язык</b> | 👥 Группа не указана"
 
     else:
-        # Обычные предметы
         class_info = f"🏫 ауд. {lesson['classnumber']}" if lesson['classnumber'] != 'online' else "🌐 онлайн"
         
-        # Определяем тип занятия по названию
         lesson_name = lesson['lesson_name']
         lesson_type = ""
         
@@ -433,18 +430,6 @@ def format_lesson(lesson):
         elif 'практикум' in lesson_name.lower():
             lesson_type = "🔧 Практикум"
             lesson_name = lesson_name.replace('практикум', '').replace('-', '').strip()
-        
-        # Форматируем время если есть
-        time_info = ""
-        if 'date' in lesson and lesson['date']:
-            time_info = f"<code>{lesson['date']}</code> "
-        
-        if lesson_type:
-            return f"{time_info}{lesson_type}: <b>{lesson_name}</b> ({class_info}) | 👤 {lesson['teacher']}"
-        else:
-            return f"{time_info}<b>{lesson_name}</b> ({class_info}) | 👤 {lesson['teacher']}"
-
-
 
 
 def get_day_name(day_key):
