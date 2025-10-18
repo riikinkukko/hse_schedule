@@ -16,16 +16,19 @@ async def choose_schedule(callback: CallbackQuery, state: FSMContext):
     await state.set_state(UserStates.waiting_for_schedule)
     
     schedule_options = [
-        "Расписание группы 1",
-        "Расписание группы 2", 
-        "Расписание преподавателя",
-        "Индивидуальное расписание"
+        "Расписание группы КНТ1",
+        "Расписание группы КНТ2", 
+        "Расписание группы КНТ3", 
+        "Расписание группы КНТ4",
+        "Расписание группы КНТ5", 
+        "Расписание группы КНТ6",    
+        "Расписание группы КНТ7",
     ]
     
     builder = InlineKeyboardBuilder()
     for i, option in enumerate(schedule_options):
         builder.button(text=option, callback_data=f"schedule_{i}")
-    builder.button(text="⬅️ Назад", callback_data="back_to_main")
+    builder.button(text="⬅️ Назад", callback_data="back_to_menu")
     builder.adjust(1)
     
     await callback.message.edit_text(
@@ -39,11 +42,14 @@ async def choose_schedule(callback: CallbackQuery, state: FSMContext):
 async def schedule_selected(callback: CallbackQuery, state: FSMContext):
     schedule_index = int(callback.data.split("_")[1])
     schedule_names = [
-        "Расписание группы 1",
-        "Расписание группы 2", 
-        "Расписание преподавателя",
-        "Индивидуальное расписание"
-    ]
+        "Расписание группы КНТ1",
+        "Расписание группы КНТ2", 
+        "Расписание группы КНТ3", 
+        "Расписание группы КНТ4",
+        "Расписание группы КНТ5", 
+        "Расписание группы КНТ6",    
+        "Расписание группы КНТ7",    
+        ]
     
     selected_schedule = schedule_names[schedule_index] if schedule_index < len(schedule_names) else "Неизвестное расписание"
     await state.update_data(user_schedule=selected_schedule)
@@ -61,7 +67,7 @@ async def settings(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
     builder.button(text="🗑️ Очистить данные", callback_data="clear_data")
     builder.button(text="📊 Статистика", callback_data="statistics")
-    builder.button(text="⬅️ Назад", callback_data="back_to_main")
+    builder.button(text="⬅️ Назад", callback_data="back_to_menu")
     builder.adjust(1)
     
     await callback.message.edit_text(
@@ -99,3 +105,11 @@ async def statistics(callback: CallbackQuery, state: FSMContext):
         reply_markup=get_main_menu()
     )
     await callback.answer()
+
+
+@menu_router.callback_query(F.data == "back_to_menu")
+async def back_to_menu(callback: CallbackQuery):
+    await callback.message.edit_text(
+        "Главное меню:",
+        reply_markup=get_main_menu()
+    )
