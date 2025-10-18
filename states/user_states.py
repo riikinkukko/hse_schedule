@@ -4,3 +4,5 @@ class UserStates(StatesGroup):
     waiting_for_schedule = State()
     waiting_for_subject_search = State()
     main_menu = State()
+    waiting_for_cst_group = State()
+    waiting_for_eng_group = State()

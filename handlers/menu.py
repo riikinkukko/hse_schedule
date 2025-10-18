@@ -51,7 +51,7 @@ async def schedule_selected(callback: CallbackQuery, state: FSMContext):
 async def get_today_schedule(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text("📥 Загружаю расписание на сегодня...")
 
-    schedule_data = await fetch_schedule()
+    schedule_data = await fetch_schedule(callback.from_user.id)
 
     if not schedule_data:
         await callback.message.edit_text(
@@ -90,7 +90,7 @@ async def get_today_schedule(callback: CallbackQuery, state: FSMContext):
 async def get_tomorrow_schedule(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text("📥 Загружаю расписание на завтра...")
 
-    schedule_data = await fetch_schedule()
+    schedule_data = await fetch_schedule(callback.from_user.id)
 
     if not schedule_data:
         await callback.message.edit_text(
@@ -124,7 +124,7 @@ async def get_tomorrow_schedule(callback: CallbackQuery, state: FSMContext):
 async def get_full_schedule(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text("📥 Загружаю полное расписание...")
 
-    schedule_data = await fetch_schedule()
+    schedule_data = await fetch_schedule(callback.from_user.id)
 
     if not schedule_data:
         await callback.message.edit_text(
@@ -158,7 +158,7 @@ async def process_subject_search(message: Message, state: FSMContext):
 
     await message.answer(f"🔍 Ищу предмет '{message.text}'...")
 
-    schedule_data = await fetch_schedule()
+    schedule_data = await fetch_schedule(message.from_user.id)
 
     if not schedule_data:
         await message.answer(
@@ -295,7 +295,6 @@ def search_lessons_by_name(schedule_data, subject_name):
     return found_lessons
 
 
-# Остальные хендлеры остаются без изменений
 @menu_router.callback_query(F.data == "settings")
 async def settings(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
@@ -318,7 +317,7 @@ async def update_schedule(callback: CallbackQuery):
 
     await callback.message.edit_text("🔄 Обновляю расписание...")
 
-    schedule_data = await fetch_schedule()
+    schedule_data = await fetch_schedule(callback.from_user.id)
 
     if schedule_data:
         await callback.message.edit_text(

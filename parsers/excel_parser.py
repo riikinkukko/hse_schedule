@@ -6,11 +6,12 @@ from os.path import join
 from os import makedirs
 from openpyxl.reader.excel import load_workbook
 
+from database.database import db
+
 MAIN_ID = '1BMR4Zk3BU2Tyo7L-CYJeMfVuCxjmmT94kfz4Jp6BFAc'
 MAIN_GID = 739453176
 ENGLISH_ID = '1RB9AWtrYm6Y9m8NSy6On7Zk3byws8RonAGBqeneSxOo'
 ENGLISH_GID = 23993546
-GROUP_NUMBER = 5
 DEST_FOLDER = ''
 OUTPUT_FILE = 'schelude.json'
 
@@ -44,8 +45,8 @@ async def download_timetable(session, id, gid, timetable_filename, dest_folder='
         return filepath
 
 
-def format_lessons(value, classnumber):
-    value = value.replace('\n', '').replace('-'*21, '').replace('-'*9, '').strip()
+def format_lessons(value, classnumber, group_cst):
+    value = value.replace('\n', '').replace('-' * 21, '').replace('-' * 9, '').strip()
     value = value.rsplit(' - ', maxsplit=1)
     if len(value) > 1 and classnumber:
         lecture, teacher = value
@@ -67,15 +68,10 @@ def save_json(data, filename, folder=''):
     return filepath
 
 
-def get_data_from_main_xlsx(filepath):
+def get_data_from_main_xlsx(filepath, group_cst):
     groups = ['E', 'I', 'M', 'Q', 'U', 'Y', 'AC']
     schelude = {
-        'mon': [],
-        'tue': [],
-        'wed': [],
-        'thu': [],
-        'fri': [],
-        'sat': [],
+        'mon': [], 'tue': [], 'wed': [], 'thu': [], 'fri': [], 'sat': [],
     }
     sheet = load_workbook(filename=filepath, data_only=True).active
 
@@ -83,9 +79,9 @@ def get_data_from_main_xlsx(filepath):
     for key in schelude.keys():
         for _ in range(9):
             line += 1
-            value = sheet[f'{groups[GROUP_NUMBER-1]}{line}'].value
-            classnumber = sheet[f'{chr(ord(groups[GROUP_NUMBER-1]) + 1)}{line}'].value
-            schelude[key].append(format_lessons(value, classnumber) if value else 'None')
+            value = sheet[f'{groups[group_cst - 1]}{line}'].value
+            classnumber = sheet[f'{chr(ord(groups[group_cst - 1]) + 1)}{line}'].value
+            schelude[key].append(format_lessons(value, classnumber, group_cst) if value else 'None')
     return schelude
 
 
@@ -93,33 +89,25 @@ def del_spaces(array):
     return [x for x in array if x != '']
 
 
-def format_eng_lessons(groups, teachers, classnumbers):
+def format_eng_lessons(groups, teachers, classnumbers, user_eng_group):
     lessons = []
     for i in range(len(groups)):
-        lesson = {
-            'lesson_name': 'Английский язык',
-            'teacher': teachers[i],
-            'classnumber': classnumbers[i],
-            'group': [int(i) for i in findall(r'\d+', groups[i])][0],
-        }
-        lessons.append(lesson)
-    return lessons
+        group_numbers = [int(num) for num in findall(r'\d+', groups[i])]
+        if user_eng_group in group_numbers:
+            lesson = {
+                'lesson_name': 'Английский язык',
+                'teacher': teachers[i],
+                'classnumber': classnumbers[i],
+                'group': user_eng_group,
+            }
+            lessons.append(lesson)
+    return lessons if lessons else 'None'
 
 
-def get_data_from_eng_xlsx(filepath):
-    faculties = {
-        'gym': 'F',
-        'knt': 'L',
-        'mng': 'R',
-        'prv': 'X',
-    }
+def get_data_from_eng_xlsx(filepath, user_eng_group):
+    faculties = {'gym': 'F', 'knt': 'L', 'mng': 'R', 'prv': 'X'}
     schelude = {
-        'mon': [],
-        'tue': [],
-        'wed': [],
-        'thu': [],
-        'fri': [],
-        'sat': [],
+        'mon': [], 'tue': [], 'wed': [], 'thu': [], 'fri': [], 'sat': [],
     }
     sheet = load_workbook(filename=filepath, data_only=True).active
     faculty = faculties['knt']
@@ -136,35 +124,42 @@ def get_data_from_eng_xlsx(filepath):
             groups = del_spaces(list(map(str.strip, column_groups.split('\n'))))
             teachers = del_spaces(list(map(str.strip, column_teachers.split('\n'))))
             classnumbers = del_spaces(list(map(str.strip, column_classnumbers.split('\n'))))
-            lessons = format_eng_lessons(groups, teachers, classnumbers)
+            lessons = format_eng_lessons(groups, teachers, classnumbers, user_eng_group)
             schelude[key].append(lessons)
     return schelude
 
 
 def join_scheludes(eng_schelude, schelude):
     for key in schelude.keys():
-        if eng_schelude[key] != ['None']*7:
+        if eng_schelude[key] != ['None'] * 7:
             schelude[key] = eng_schelude[key]
     return schelude
 
 
-async def get_schedule_data():
+async def get_schedule_data(user_id: int):
+    user_groups = db.get_user_groups(user_id)
+    if not user_groups:
+        raise ValueError("User groups not found")
+
+    group_cst, group_eng = user_groups
+
     async with aiohttp.ClientSession() as session:
         main_file, eng_file = await asyncio.gather(
             download_timetable(session, MAIN_ID, MAIN_GID, 'timetable.xlsx'),
             download_timetable(session, ENGLISH_ID, ENGLISH_GID, 'timetable_eng.xlsx')
         )
 
-        schelude = get_data_from_main_xlsx(main_file)
-        eng_schelude = get_data_from_eng_xlsx(eng_file)
+        schelude = get_data_from_main_xlsx(main_file, group_cst)
+        eng_schelude = get_data_from_eng_xlsx(eng_file, group_eng)
 
         data = join_scheludes(eng_schelude, schelude)
         return data
 
 
-async def fetch_schedule():
+
+async def fetch_schedule(user_id: int):
     try:
-        schedule_data = await get_schedule_data()
+        schedule_data = await get_schedule_data(user_id)
         return schedule_data
     except Exception as e:
         print(f"Ошибка при получении расписания: {e}")
