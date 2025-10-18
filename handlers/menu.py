@@ -3,9 +3,10 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.fsm.context import FSMContext
 
-from keyboards import get_main_menu
+from keyboards import get_main_menu, get_settings_menu, get_back_to_settings_menu
 from states import UserStates
 from parsers.excel_parser import fetch_schedule
+from database.database import db
 
 from lexicon import LEXICON_BUTTONS
 
@@ -188,6 +189,169 @@ async def process_subject_search(message: Message, state: FSMContext):
     await state.clear()
 
 
+@menu_router.callback_query(F.data == "settings")
+async def settings(callback: CallbackQuery):
+    user_groups = db.get_user_groups(callback.from_user.id)
+    if user_groups:
+        group_cst, group_eng = user_groups
+        settings_text = (
+            "⚙️ Настройки:\n\n"
+            f"📊 Текущие настройки:\n"
+            f"• Группа КНТ: {group_cst}\n"
+            f"• Группа английского: {group_eng}\n\n"
+            "Выберите действие:"
+        )
+    else:
+        settings_text = "⚙️ Настройки:\n\nВыберите действие:"
+
+    await callback.message.edit_text(
+        settings_text,
+        reply_markup=get_settings_menu()
+    )
+    await callback.answer()
+
+
+@menu_router.callback_query(F.data == "change_cst_group")
+async def change_cst_group(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(
+        "✏️ Введите новую группу КНТ (только цифру, например: 5):"
+    )
+    await state.set_state(UserStates.waiting_for_new_cst_group)
+    await callback.answer()
+
+
+@menu_router.callback_query(F.data == "change_eng_group")
+async def change_eng_group(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(
+        "🌍 Введите новую группу английского (только цифру, например: 3):"
+    )
+    await state.set_state(UserStates.waiting_for_new_eng_group)
+    await callback.answer()
+
+
+@menu_router.message(UserStates.waiting_for_new_cst_group)
+async def process_new_cst_group(message: Message, state: FSMContext):
+    try:
+        new_group = int(message.text.strip())
+
+        if 1 <= new_group <= 7:
+            user_groups = db.get_user_groups(message.from_user.id)
+            if user_groups:
+                current_cst, current_eng = user_groups
+
+                if db.update_user_groups(message.from_user.id, new_group, current_eng):
+                    await message.answer(
+                        f"✅ Группа КНТ успешно изменена!\n"
+                        f"📊 Было: {current_cst} → Стало: {new_group}",
+                        reply_markup=get_back_to_settings_menu()
+                    )
+                else:
+                    await message.answer(
+                        "❌ Ошибка при обновлении группы. Попробуйте снова.",
+                        reply_markup=get_back_to_settings_menu()
+                    )
+            else:
+                await message.answer(
+                    "❌ Не удалось найти ваши данные. Используйте /start для регистрации.",
+                    reply_markup=get_main_menu()
+                )
+        else:
+            await message.answer(
+                "❌ Пожалуйста, введите корректный номер группы КНТ (от 1 до 7):"
+            )
+    except ValueError:
+        await message.answer(
+            "❌ Пожалуйста, введите только цифру (например: 5):"
+        )
+
+    await state.clear()
+
+
+@menu_router.message(UserStates.waiting_for_new_eng_group)
+async def process_new_eng_group(message: Message, state: FSMContext):
+    try:
+        new_group = int(message.text.strip())
+
+        if 1 <= new_group <= 15:
+            user_groups = db.get_user_groups(message.from_user.id)
+            if user_groups:
+                current_cst, current_eng = user_groups
+
+                if db.update_user_groups(message.from_user.id, current_cst, new_group):
+                    await message.answer(
+                        f"✅ Группа английского успешно изменена!\n"
+                        f"🌍 Было: {current_eng} → Стало: {new_group}",
+                        reply_markup=get_back_to_settings_menu()
+                    )
+                else:
+                    await message.answer(
+                        "❌ Ошибка при обновлении группы. Попробуйте снова.",
+                        reply_markup=get_back_to_settings_menu()
+                    )
+            else:
+                await message.answer(
+                    "❌ Не удалось найти ваши данные. Используйте /start для регистрации.",
+                    reply_markup=get_main_menu()
+                )
+        else:
+            await message.answer(
+                "❌ Пожалуйста, введите корректный номер группы английского (от 1 до 15):"
+            )
+    except ValueError:
+        await message.answer(
+            "❌ Пожалуйста, введите только цифру (например: 3):"
+        )
+
+    await state.clear()
+
+
+@menu_router.callback_query(F.data == "clear_data")
+async def clear_data(callback: CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+
+    if db.user_exists(user_id):
+        db.delete_user(user_id)
+
+    await state.clear()
+    await callback.message.edit_text(
+        "🗑️ Все ваши данные очищены! Используйте /start для повторной регистрации.",
+        reply_markup=get_main_menu()
+    )
+    await callback.answer()
+
+
+@menu_router.callback_query(F.data == "statistics")
+async def statistics(callback: CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+    user_groups = db.get_user_groups(user_id)
+
+    if user_groups:
+        group_cst, group_eng = user_groups
+        stats_text = (
+            "📊 Ваши настройки:\n\n"
+            f"🆔 ID: {user_id}\n"
+            f"📅 Группа КНТ: {group_cst}\n"
+            f"🌍 Группа английского: {group_eng}\n\n"
+            f"✏️ Для изменения групп используйте меню настроек"
+        )
+    else:
+        stats_text = "❌ Данные не найдены. Используйте /start для регистрации."
+
+    await callback.message.edit_text(
+        stats_text,
+        reply_markup=get_settings_menu()
+    )
+    await callback.answer()
+
+
+@menu_router.callback_query(F.data == "back_to_menu")
+async def back_to_menu(callback: CallbackQuery):
+    await callback.message.edit_text(
+        "Главное меню:",
+        reply_markup=get_main_menu()
+    )
+
+
 def format_daily_schedule(lessons, day_name):
     result = [f"📅 {day_name}:\n"]
 
@@ -238,7 +402,7 @@ def format_lesson(lesson):
     if isinstance(lesson, list):
         english_lessons = []
         for eng_lesson in lesson:
-            if eng_lesson.get('group') == 8:
+            if eng_lesson.get('group') == 5:
                 class_info = f"ауд. {eng_lesson['classnumber']}" if eng_lesson['classnumber'] != 'online' else "онлайн"
                 return f"🇬🇧 {eng_lesson['lesson_name']} ({class_info}) - {eng_lesson['teacher']}"
         return "Английский язык (группа не указана)"
@@ -295,6 +459,7 @@ def search_lessons_by_name(schedule_data, subject_name):
                         'lesson': lesson
                     })
 
+<<<<<<< HEAD
     return found_lessons
 
 
@@ -370,3 +535,6 @@ async def back_to_menu(callback: CallbackQuery):
         "Главное меню:",
         reply_markup=get_main_menu()
     )
+=======
+    return found_lessons
+>>>>>>> 1f9771a9ed063d395483dc93bc5a03c2c574d866

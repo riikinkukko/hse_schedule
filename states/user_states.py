@@ -6,3 +6,5 @@ class UserStates(StatesGroup):
     main_menu = State()
     waiting_for_cst_group = State()
     waiting_for_eng_group = State()
+    waiting_for_new_cst_group = State()
+    waiting_for_new_eng_group = State()
