@@ -353,44 +353,50 @@ async def back_to_menu(callback: CallbackQuery):
 
 
 def format_daily_schedule(lessons, day_name):
-    result = [f"📅 {day_name}:\n"]
+    result = [f"<b>📅 {day_name.upper()}:</b>\n"]
 
+    has_valid_lessons = False
+    
     for i, lesson in enumerate(lessons, 1):
-        result.append(f"{i}. {format_lesson(lesson)}")
+        if lesson != 'None':
+            formatted_lesson = format_lesson(lesson)
+            result.append(f"{i}. {formatted_lesson}")
+            has_valid_lessons = True
 
-    if not any(lesson != 'None' for lesson in lessons):
-        result.append("\n🎉 Выходной! Занятий нет.")
+    if not has_valid_lessons:
+        result.append("\n🎉 <b>Выходной! Занятий нет.</b>")
 
     return "\n".join(result)
 
 
 def format_weekly_schedule(schedule_data):
-    result = ["📊 Полное расписание на неделю:\n"]
+    result = ["<b>📊 ПОЛНОЕ РАСПИСАНИЕ НА НЕДЕЛЮ</b>\n"]
 
     days_order = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat']
     day_names = {
-        'mon': 'Понедельник',
-        'tue': 'Вторник',
-        'wed': 'Среда',
-        'thu': 'Четверг',
-        'fri': 'Пятница',
-        'sat': 'Суббота'
+        'mon': 'ПОНЕДЕЛЬНИК',
+        'tue': 'ВТОРНИК',
+        'wed': 'СРЕДА', 
+        'thu': 'ЧЕТВЕРГ',
+        'fri': 'ПЯТНИЦА',
+        'sat': 'СУББОТА'
     }
 
     for day_key in days_order:
         day_name = day_names[day_key]
         lessons = schedule_data.get(day_key, [])
 
-        result.append(f"\n📅 {day_name}:")
+        result.append(f"\n<b>📅 {day_name}:</b>")
 
         has_lessons = False
         for i, lesson in enumerate(lessons, 1):
             if lesson != 'None':
-                result.append(f"  {i}. {format_lesson(lesson)}")
+                formatted_lesson = format_lesson(lesson)
+                result.append(f"  {i}. {formatted_lesson}")
                 has_lessons = True
 
         if not has_lessons:
-            result.append("  🎉 Выходной!")
+            result.append("  🎉 <b>Выходной!</b>")
 
     return "\n".join(result)
 
@@ -400,16 +406,45 @@ def format_lesson(lesson):
         return "-"
 
     if isinstance(lesson, list):
-        english_lessons = []
+        # Обработка английского языка
         for eng_lesson in lesson:
             if eng_lesson.get('group') == 5:
-                class_info = f"ауд. {eng_lesson['classnumber']}" if eng_lesson['classnumber'] != 'online' else "онлайн"
-                return f"🇬🇧 {eng_lesson['lesson_name']} ({class_info}) - {eng_lesson['teacher']}"
-        return "Английский язык (группа не указана)"
+                class_info = f"🏫 ауд. {eng_lesson['classnumber']}" if eng_lesson['classnumber'] != 'online' else "🌐 онлайн"
+                return f"🇬🇧 <b>{eng_lesson['lesson_name']}</b> ({class_info}) | 👤 {eng_lesson['teacher']}"
+        return "🇬🇧 <b>Английский язык</b> | 👥 Группа не указана"
 
     else:
-        class_info = f"ауд. {lesson['classnumber']}" if lesson['classnumber'] != 'online' else "онлайн"
-        return f"{lesson['lesson_name']} ({class_info}) - {lesson['teacher']}"
+        # Обычные предметы
+        class_info = f"🏫 ауд. {lesson['classnumber']}" if lesson['classnumber'] != 'online' else "🌐 онлайн"
+        
+        # Определяем тип занятия по названию
+        lesson_name = lesson['lesson_name']
+        lesson_type = ""
+        
+        if 'лекция' in lesson_name.lower():
+            lesson_type = "🎓 Лекция"
+            lesson_name = lesson_name.replace('лекция', '').replace('-', '').strip()
+        elif 'семинар' in lesson_name.lower():
+            lesson_type = "📚 Семинар" 
+            lesson_name = lesson_name.replace('семинар', '').replace('-', '').strip()
+        elif 'практическое занятие' in lesson_name.lower():
+            lesson_type = "💻 Практика"
+            lesson_name = lesson_name.replace('практическое занятие', '').replace('-', '').strip()
+        elif 'практикум' in lesson_name.lower():
+            lesson_type = "🔧 Практикум"
+            lesson_name = lesson_name.replace('практикум', '').replace('-', '').strip()
+        
+        # Форматируем время если есть
+        time_info = ""
+        if 'date' in lesson and lesson['date']:
+            time_info = f"<code>{lesson['date']}</code> "
+        
+        if lesson_type:
+            return f"{time_info}{lesson_type}: <b>{lesson_name}</b> ({class_info}) | 👤 {lesson['teacher']}"
+        else:
+            return f"{time_info}<b>{lesson_name}</b> ({class_info}) | 👤 {lesson['teacher']}"
+
+
 
 
 def get_day_name(day_key):
@@ -459,7 +494,6 @@ def search_lessons_by_name(schedule_data, subject_name):
                         'lesson': lesson
                     })
 
-<<<<<<< HEAD
     return found_lessons
 
 
@@ -535,6 +569,3 @@ async def back_to_menu(callback: CallbackQuery):
         "Главное меню:",
         reply_markup=get_main_menu()
     )
-=======
-    return found_lessons
->>>>>>> 1f9771a9ed063d395483dc93bc5a03c2c574d866

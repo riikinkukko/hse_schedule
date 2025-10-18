@@ -2,6 +2,8 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
 
 from config import Config, load_config
 from handlers import menu_router, command_router, other_router
@@ -11,7 +13,9 @@ async def main():
     logging.basicConfig(level=logging.INFO)
     config: Config = load_config()
 
-    bot = Bot(token=config.bot.token)
+    bot = Bot(
+        token=config.bot.token,
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()
 
     dp.include_routers(command_router,
