@@ -14,7 +14,7 @@ async def process_cst_group(message: Message, state: FSMContext):
     try:
         group_cst = int(message.text.strip())
 
-        if 1 <= group_cst <= 10:
+        if 1 <= group_cst <= 7:
             await state.update_data(group_cst=group_cst)
             await message.answer(
                 f"✅ Группа КНТ: {group_cst}\n\n"
@@ -23,7 +23,7 @@ async def process_cst_group(message: Message, state: FSMContext):
             await state.set_state(UserStates.waiting_for_eng_group)
         else:
             await message.answer(
-                "❌ Пожалуйста, введите корректный номер группы КНТ (от 1 до 10):"
+                "❌ Пожалуйста, введите корректный номер группы КНТ (от 1 до 7):"
             )
     except ValueError:
         await message.answer(
