@@ -358,7 +358,7 @@ def format_daily_schedule(lessons, day_name):
     has_valid_lessons = False
     
     for i, lesson in enumerate(lessons, 1):
-        if lesson != 'None':
+        if lesson != 'None' and lesson is not None:
             formatted_lesson = format_lesson(lesson)
             result.append(f"{i}. {formatted_lesson}")
             has_valid_lessons = True
@@ -390,7 +390,7 @@ def format_weekly_schedule(schedule_data):
 
         has_lessons = False
         for i, lesson in enumerate(lessons, 1):
-            if lesson != 'None':
+            if lesson != 'None' and lesson is not None:
                 formatted_lesson = format_lesson(lesson)
                 result.append(f"  {i}. {formatted_lesson}")
                 has_lessons = True
@@ -402,17 +402,20 @@ def format_weekly_schedule(schedule_data):
 
 
 def format_lesson(lesson):
-    if lesson == 'None':
+    if lesson == 'None' or lesson is None:
         return "-"
 
     if isinstance(lesson, list):
         for eng_lesson in lesson:
-            if eng_lesson.get('group') == 5:
+            if eng_lesson.get('group') == 5: 
                 class_info = f"🏫 ауд. {eng_lesson['classnumber']}" if eng_lesson['classnumber'] != 'online' else "🌐 онлайн"
                 return f"🇬🇧 <b>{eng_lesson['lesson_name']}</b> ({class_info}) | 👤 {eng_lesson['teacher']}"
         return "🇬🇧 <b>Английский язык</b> | 👥 Группа не указана"
 
     else:
+        if not isinstance(lesson, dict):
+            return f"<b>Неизвестный формат урока: {lesson}</b>"
+            
         class_info = f"🏫 ауд. {lesson['classnumber']}" if lesson['classnumber'] != 'online' else "🌐 онлайн"
         
         lesson_name = lesson['lesson_name']
@@ -430,6 +433,11 @@ def format_lesson(lesson):
         elif 'практикум' in lesson_name.lower():
             lesson_type = "🔧 Практикум"
             lesson_name = lesson_name.replace('практикум', '').replace('-', '').strip()
+        
+        if not lesson_type:
+            return f"<b>{lesson_name}</b> ({class_info}) | 👤 {lesson['teacher']}"
+        else:
+            return f"{lesson_type}: <b>{lesson_name}</b> ({class_info}) | 👤 {lesson['teacher']}"
 
 
 def get_day_name(day_key):
