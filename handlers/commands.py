@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import Message, FSInputFile
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
@@ -21,26 +21,32 @@ async def cmd_start(message: Message, state: FSMContext):
         user_groups = db.get_user_groups(user_id)
         if user_groups:
             group_cst, group_eng = user_groups
-            await message.answer(
+            await message.answer_photo(
+                photo=FSInputFile("images/hse_logo.jpg"),
+                caption=( 
                 f"👋 С возвращением!\n"
                 f"📊 Ваши настройки:\n"
                 f"• Группа КНТ: {group_cst}\n"
                 f"• Группа английского: {group_eng}\n\n"
-                f"Выберите действие:",
+                f"Выберите действие:"),
                 reply_markup=get_main_menu()
             )
             await state.set_state(UserStates.main_menu)
         else:
-            await message.answer(
+            await message.answer_photo(
+                photo=FSInputFile("images/hse_logo.jpg"),
+                caption=(
                 "❌ Произошла ошибка при загрузке ваших данных. "
-                "Пожалуйста, пройдите регистрацию заново.",
+                "Пожалуйста, пройдите регистрацию заново."),
                 reply_markup=get_main_menu()
             )
     else:
-        await message.answer(
+        await message.answer_photo(
+                photo=FSInputFile("images/hse_logo.jpg"),
+                caption=(
             "👋 Добро пожаловать в бот расписания НИУ ВШЭ!\n\n"
             "Для начала работы мне нужно узнать ваши группы.\n"
-            "📝 Введите вашу группу КНТ (только цифру, 1-7)"
+            "📝 Введите вашу группу КНТ (только цифру, 1-7)")
         )
         await state.set_state(UserStates.waiting_for_cst_group)
 
@@ -50,14 +56,17 @@ async def cmd_menu(message: Message, state: FSMContext):
     user_id = message.from_user.id
 
     if not db.user_exists(user_id):
-        await message.answer(
-            "❌ Вы не зарегистрированы. Используйте /start для регистрации."
+        await message.answer_photo(
+                photo=FSInputFile("images/hse_logo.jpg"),
+                caption=(
+            "❌ Вы не зарегистрированы. Используйте /start для регистрации.")
         )
         return
 
-    await message.answer(
-        text=LEXICON_COMMANDS["/menu"],
-        reply_markup=get_main_menu()
+    await message.answer_photo(
+                photo=FSInputFile("images/hse_logo.jpg"),
+                caption=LEXICON_COMMANDS["/menu"],
+                reply_markup=get_main_menu()
     )
     await state.set_state(UserStates.main_menu)
 

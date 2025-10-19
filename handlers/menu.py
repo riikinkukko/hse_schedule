@@ -31,8 +31,8 @@ async def choose_schedule(callback: CallbackQuery, state: FSMContext):
     builder.button(text=LEXICON_BUTTONS["back_to_menu"], callback_data="back_to_menu")
     builder.adjust(1)
 
-    await callback.message.edit_text(
-        "Выберите действие с расписанием:",
+    await callback.message.edit_caption(
+        caption="Выберите действие с расписанием:",
         reply_markup=builder.as_markup()
     )
     await callback.answer()
@@ -53,13 +53,13 @@ async def schedule_selected(callback: CallbackQuery, state: FSMContext):
 
 
 async def get_today_schedule(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text("📥 Загружаю расписание на сегодня...")
+    await callback.message.edit_caption(caption="📥 Загружаю расписание на сегодня...")
 
     schedule_data = await fetch_schedule(callback.from_user.id)
 
     if not schedule_data:
-        await callback.message.edit_text(
-            "❌ Не удалось загрузить расписание. Попробуйте позже.",
+        await callback.message.edit_caption(
+            caption="❌ Не удалось загрузить расписание. Попробуйте позже.",
             reply_markup=get_main_menu()
         )
         return
@@ -85,20 +85,20 @@ async def get_today_schedule(callback: CallbackQuery, state: FSMContext):
     builder.button(text="⬅️ Назад", callback_data="choose_schedule")
     builder.adjust(1)
 
-    await callback.message.edit_text(
-        formatted_schedule,
+    await callback.message.edit_caption(
+        caption=formatted_schedule,
         reply_markup=builder.as_markup()
     )
 
 
 async def get_tomorrow_schedule(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text("📥 Загружаю расписание на завтра...")
+    await callback.message.edit_caption(caption="📥 Загружаю расписание на завтра...")
 
     schedule_data = await fetch_schedule(callback.from_user.id)
 
     if not schedule_data:
-        await callback.message.edit_text(
-            "❌ Не удалось загрузить расписание. Попробуйте позже.",
+        await callback.message.edit_caption(
+            caption="❌ Не удалось загрузить расписание. Попробуйте позже.",
             reply_markup=get_main_menu()
         )
         return
@@ -119,20 +119,20 @@ async def get_tomorrow_schedule(callback: CallbackQuery, state: FSMContext):
     builder.button(text="⬅️ Назад", callback_data="choose_schedule")
     builder.adjust(1)
 
-    await callback.message.edit_text(
-        formatted_schedule,
+    await callback.message.edit_caption(
+        caption=formatted_schedule,
         reply_markup=builder.as_markup()
     )
 
 
 async def get_full_schedule(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text("📥 Загружаю полное расписание...")
+    await callback.message.edit_caption(caption="📥 Загружаю полное расписание...")
 
     schedule_data = await fetch_schedule(callback.from_user.id)
 
     if not schedule_data:
-        await callback.message.edit_text(
-            "❌ Не удалось загрузить расписание. Попробуйте позже.",
+        await callback.message.edit_caption(
+            caption="❌ Не удалось загрузить расписание. Попробуйте позже.",
             reply_markup=get_main_menu()
         )
         return
@@ -145,14 +145,17 @@ async def get_full_schedule(callback: CallbackQuery, state: FSMContext):
     builder.button(text="⬅️ Назад", callback_data="choose_schedule")
     builder.adjust(1)
 
-    await callback.message.edit_text(
-        formatted_schedule,
+
+    print(formatted_schedule)
+
+    await callback.message.edit_caption(
+        caption=formatted_schedule,
         reply_markup=builder.as_markup()
     )
 
 
 async def search_subject(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text("🔍 Введите название предмета для поиска:")
+    await callback.message.edit_caption(caption="🔍 Введите название предмета для поиска:")
     await state.set_state(UserStates.waiting_for_subject_search)
 
 
@@ -204,8 +207,8 @@ async def settings(callback: CallbackQuery):
     else:
         settings_text = "⚙️ Настройки:\n\nВыберите действие:"
 
-    await callback.message.edit_text(
-        settings_text,
+    await callback.message.edit_caption(
+        caption=settings_text,
         reply_markup=get_settings_menu()
     )
     await callback.answer()
@@ -213,8 +216,8 @@ async def settings(callback: CallbackQuery):
 
 @menu_router.callback_query(F.data == "change_cst_group")
 async def change_cst_group(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text(
-        "✏️ Введите новую группу КНТ (только цифру, например: 5):"
+    await callback.message.edit_caption(
+        caption="✏️ Введите новую группу КНТ (только цифру, например: 5):"
     )
     await state.set_state(UserStates.waiting_for_new_cst_group)
     await callback.answer()
@@ -222,8 +225,8 @@ async def change_cst_group(callback: CallbackQuery, state: FSMContext):
 
 @menu_router.callback_query(F.data == "change_eng_group")
 async def change_eng_group(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text(
-        "🌍 Введите новую группу английского (только цифру, например: 3):"
+    await callback.message.edit_caption(
+        caption="🌍 Введите новую группу английского (только цифру, например: 3):"
     )
     await state.set_state(UserStates.waiting_for_new_eng_group)
     await callback.answer()
@@ -313,8 +316,8 @@ async def clear_data(callback: CallbackQuery, state: FSMContext):
         db.delete_user(user_id)
 
     await state.clear()
-    await callback.message.edit_text(
-        "🗑️ Все ваши данные очищены! Используйте /start для повторной регистрации.",
+    await callback.message.edit_caption(
+        caption="🗑️ Все ваши данные очищены! Используйте /start для повторной регистрации.",
         reply_markup=get_main_menu()
     )
     await callback.answer()
@@ -337,8 +340,8 @@ async def statistics(callback: CallbackQuery, state: FSMContext):
     else:
         stats_text = "❌ Данные не найдены. Используйте /start для регистрации."
 
-    await callback.message.edit_text(
-        stats_text,
+    await callback.message.edit_caption(
+        caption=stats_text,
         reply_markup=get_settings_menu()
     )
     await callback.answer()
@@ -346,8 +349,8 @@ async def statistics(callback: CallbackQuery, state: FSMContext):
 
 @menu_router.callback_query(F.data == "back_to_menu")
 async def back_to_menu(callback: CallbackQuery):
-    await callback.message.edit_text(
-        "Главное меню:",
+    await callback.message.edit_caption(
+        caption="Главное меню:",
         reply_markup=get_main_menu()
     )
 
@@ -358,7 +361,8 @@ def format_daily_schedule(lessons, day_name):
     has_valid_lessons = False
     
     for i, lesson in enumerate(lessons, 1):
-        if lesson != 'None':
+        # Исправлено: проверяем именно строку 'None'
+        if lesson != 'None' and lesson is not None:
             formatted_lesson = format_lesson(lesson)
             result.append(f"{i}. {formatted_lesson}")
             has_valid_lessons = True
@@ -390,7 +394,8 @@ def format_weekly_schedule(schedule_data):
 
         has_lessons = False
         for i, lesson in enumerate(lessons, 1):
-            if lesson != 'None':
+            # Исправлено: проверяем именно строку 'None'
+            if lesson != 'None' and lesson is not None:
                 formatted_lesson = format_lesson(lesson)
                 result.append(f"  {i}. {formatted_lesson}")
                 has_lessons = True
@@ -402,17 +407,22 @@ def format_weekly_schedule(schedule_data):
 
 
 def format_lesson(lesson):
-    if lesson == 'None':
+    # Добавляем проверку на строку 'None' в начале функции
+    if lesson == 'None' or lesson is None:
         return "-"
 
     if isinstance(lesson, list):
         for eng_lesson in lesson:
-            if eng_lesson.get('group') == 5:
+            if eng_lesson.get('group') == 5:  # или другая логика выбора группы
                 class_info = f"🏫 ауд. {eng_lesson['classnumber']}" if eng_lesson['classnumber'] != 'online' else "🌐 онлайн"
                 return f"🇬🇧 <b>{eng_lesson['lesson_name']}</b> ({class_info}) | 👤 {eng_lesson['teacher']}"
         return "🇬🇧 <b>Английский язык</b> | 👥 Группа не указана"
 
     else:
+        # Добавляем проверку, что lesson - это словарь
+        if not isinstance(lesson, dict):
+            return f"<b>Неизвестный формат урока: {lesson}</b>"
+            
         class_info = f"🏫 ауд. {lesson['classnumber']}" if lesson['classnumber'] != 'online' else "🌐 онлайн"
         
         lesson_name = lesson['lesson_name']
@@ -430,6 +440,12 @@ def format_lesson(lesson):
         elif 'практикум' in lesson_name.lower():
             lesson_type = "🔧 Практикум"
             lesson_name = lesson_name.replace('практикум', '').replace('-', '').strip()
+        
+        # Если тип не определился, используем общий формат
+        if not lesson_type:
+            return f"<b>{lesson_name}</b> ({class_info}) | 👤 {lesson['teacher']}"
+        else:
+            return f"{lesson_type}: <b>{lesson_name}</b> ({class_info}) | 👤 {lesson['teacher']}"
 
 
 def get_day_name(day_key):
@@ -491,9 +507,9 @@ async def settings(callback: CallbackQuery):
     builder.button(text=LEXICON_BUTTONS["back_to_menu"], callback_data="back_to_menu")
     builder.adjust(1)
 
-    await callback.message.edit_text(
-        "⚙️ Настройки:\n"
-        "Выберите действие:",
+    await callback.message.edit_caption(
+        caption=("⚙️ Настройки:\n"
+        "Выберите действие:"),
         reply_markup=builder.as_markup()
     )
     await callback.answer()
@@ -502,18 +518,18 @@ async def settings(callback: CallbackQuery):
 @menu_router.callback_query(F.data == "update_schedule")
 async def update_schedule(callback: CallbackQuery):
 
-    await callback.message.edit_text("🔄 Обновляю расписание...")
+    await callback.message.edit_caption(caption="🔄 Обновляю расписание...")
 
     schedule_data = await fetch_schedule(callback.from_user.id)
 
     if schedule_data:
-        await callback.message.edit_text(
-            "✅ Расписание успешно обновлено!",
+        await callback.message.edit_caption(
+            caption="✅ Расписание успешно обновлено!",
             reply_markup=get_main_menu()
         )
     else:
-        await callback.message.edit_text(
-            "❌ Не удалось обновить расписание. Попробуйте позже.",
+        await callback.message.edit_caption(
+            caption="❌ Не удалось обновить расписание. Попробуйте позже.",
             reply_markup=get_main_menu()
         )
     await callback.answer()
@@ -522,8 +538,8 @@ async def update_schedule(callback: CallbackQuery):
 @menu_router.callback_query(F.data == "clear_data")
 async def clear_data(callback: CallbackQuery, state: FSMContext):
     await state.clear()
-    await callback.message.edit_text(
-        "🗑️ Все ваши данные очищены!",
+    await callback.message.edit_caption(
+        caption="🗑️ Все ваши данные очищены!",
         reply_markup=get_main_menu()
     )
     await callback.answer()
@@ -541,8 +557,8 @@ async def statistics(callback: CallbackQuery, state: FSMContext):
     else:
         stats_text += f"📅 Расписание: не выбрано\n"
 
-    await callback.message.edit_text(
-        stats_text,
+    await callback.message.edit_caption(
+        caption=stats_text,
         reply_markup=get_main_menu()
     )
     await callback.answer()
@@ -550,7 +566,7 @@ async def statistics(callback: CallbackQuery, state: FSMContext):
 
 @menu_router.callback_query(F.data == "back_to_menu")
 async def back_to_menu(callback: CallbackQuery):
-    await callback.message.edit_text(
-        "Главное меню:",
+    await callback.message.edit_caption(
+        caption="Главное меню:",
         reply_markup=get_main_menu()
     )
