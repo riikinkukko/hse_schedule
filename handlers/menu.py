@@ -407,7 +407,7 @@ def format_lesson(lesson):
 
     if isinstance(lesson, list):
         for eng_lesson in lesson:
-            if eng_lesson.get('group') == 5: 
+            if eng_lesson.get('group') in range(1, 20): 
                 class_info = f"🏫 ауд. {eng_lesson['classnumber']}" if eng_lesson['classnumber'] != 'online' else "🌐 онлайн"
                 return f"🇬🇧 <b>{eng_lesson['lesson_name']}</b> ({class_info}) | 👤 {eng_lesson['teacher']}"
         return "🇬🇧 <b>Английский язык</b> | 👥 Группа не указана"
